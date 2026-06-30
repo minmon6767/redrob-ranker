@@ -1,0 +1,101 @@
+# Redrob Hackathon — Submission Metadata
+# Mirrors the portal metadata submitted at upload time (submission_spec.md §10.2-10.3).
+
+# ============================================================================
+# Team identity
+# ============================================================================
+team_name: "Pranjal"
+
+primary_contact:
+  name: "Pranjal"
+  email: "REPLACE_WITH_YOUR_EMAIL@example.com"
+  phone: "+91-REPLACE_WITH_YOUR_NUMBER"
+
+team_members:
+  - name: "Pranjal"
+    email: "REPLACE_WITH_YOUR_EMAIL@example.com"
+    role: "Solo participant — ML/Data Engineering"
+
+# ============================================================================
+# Code and reproducibility
+# ============================================================================
+github_repo: "https://github.com/REPLACE_WITH_YOUR_USERNAME/redrob-ranker"
+# Required. Update this once pushed to GitHub.
+
+sandbox_link: "https://REPLACE_WITH_YOUR_USERNAME-redrob-ranker.streamlit.app"
+# Required. Deploy sandbox/app.py to Streamlit Community Cloud (free tier)
+# pointing at this repo, then paste the resulting URL here. See sandbox/README
+# notes in the main README.md "Running the sandbox demo" section.
+
+reproduce_command: "python src/rank.py --candidates ./data/candidates.jsonl --out ./artifacts/submission.csv"
+
+# ============================================================================
+# Compute environment
+# ============================================================================
+compute:
+  platform: "Local Linux container (development/test environment)"
+  cpu_cores: 1
+  ram_gb: 4
+  python_version: "3.12.3"
+  os: "Ubuntu 24.04 (container)"
+  uses_gpu_for_inference: false
+  has_network_during_ranking: false
+  pre_computation_required: false
+  pre_computation_time_minutes: 0
+  # Note: developed/timed on a 1-core/4GB container -- tighter than the
+  # challenge's 16GB/CPU-only allowance. Full 100K-pool run completed in
+  # ~105 seconds wall-clock, well under the 5-minute limit. Update this
+  # block with your own machine's specs if you re-run rank.py locally.
+
+# ============================================================================
+# AI tools declaration
+# ============================================================================
+ai_tools_used:
+  - "Claude"
+
+ai_usage_summary: |
+  Used Claude (Anthropic) as a development collaborator: reading and
+  structuring the JD/spec/signals documents into the jd_spec.py config,
+  designing the multi-signal scoring architecture, writing and iterating on
+  the feature engineering, honeypot detection, semantic similarity, score
+  fusion, and reasoning-generation code, and writing the test suite. All
+  empirical decisions (honeypot detection thresholds, feature weights) were
+  derived by directly inspecting statistics computed from the released
+  100K-candidate pool, not invented or assumed. No candidate data was sent
+  to any external LLM API at ranking time -- rank.py makes zero network
+  calls; it only uses scikit-learn locally.
+
+# ============================================================================
+# Approach summary
+# ============================================================================
+methodology_summary: |
+  Multi-signal hybrid ranker, fully CPU-local and offline at ranking time.
+  Five components feed a weighted score fusion: (1) structured JD-fit
+  features -- title/seniority match, trust-weighted must-have skill
+  coverage (proficiency x endorsements x duration, to resist keyword
+  stuffing), applied-ML career-time fraction, location/relocation fit; (2) a
+  local TF-IDF + truncated-SVD (LSA) semantic similarity score against the
+  JD text, fit from scratch on the candidate pool (no pretrained embeddings,
+  no network); (3) a multiplicative behavioral-signal modifier from
+  redrob_signals (recency, recruiter response rate, notice period) so
+  availability discounts fit rather than competing with it; (4) a
+  multiplicative honeypot/profile-inconsistency penalty from three
+  empirically-validated channels (skill duration vs. years of experience,
+  expert-with-no-time-invested skills, and free-text-vs-structured YOE
+  mismatch); (5) soft disqualifier penalties calibrated to the JD's own
+  language ("will not" vs "probably will not move forward") for
+  pure-research-only, consulting-only, CV/speech/robotics-only, and
+  title-chasing patterns. Every ranked candidate gets a deterministic,
+  template-resistant reasoning string built directly from their own profile
+  fields -- no LLM call, so it cannot hallucinate. Runtime: ~105 seconds for
+  100K candidates on a single CPU core.
+
+# ============================================================================
+# Declarations
+# ============================================================================
+declarations:
+  read_submission_spec: true
+  code_is_original_work: true
+  no_collusion: true
+  honeypot_check_done: true
+  reproduction_tested: true
